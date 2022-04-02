@@ -37,7 +37,7 @@ def solve(x_sorted, y_sorted):
             strip.append(point)
     d = delta
     for i in range(len(strip)):
-        for j in range(i+1, len(strip)):
+        for j in range(i+1, min(i+7, len(strip)):
             d = min(d, dist(strip[i], strip[j]))
 
     return d
