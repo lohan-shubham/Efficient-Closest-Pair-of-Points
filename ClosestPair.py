@@ -1,94 +1,46 @@
-import math
 import random
 
 
 def dist(p1, p2):
-
     return ((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)**0.5
 
 
-#!========================================================================================================================
-def sort_points_by_X(points):
-
-    return sorted(points)
-#!==========================================================================================================================
-
-
-def sort_points_by_Y(points):
-
-    return sorted(points, key=lambda Y: Y[1])
-
-#!=========================================================================================================================
-
-
-def naive_closest_pair(plane):  # ? Brute Force Apporach
-    min_dis = float('inf')
-    for i in range(len(plane)):
-        for j in range(i+1, len(plane)):
-            d = dist(plane[i], plane[j])
-            if d < min_dis:
-                min_dis = d
-                point1 = plane[i]
-                point2 = plane[j]
-
-    return [min_dis, point1, point2]
-
-#!============================================DIVIDE AND CONQUER================================================================================
-
-
-def closest_pair_in_strip(points, d):
-    min_dis = d
-    P = sort_points_by_Y(points)
-    for i in range(len(P)):
-        for j in range(i+1, len(P)):
-            if abs(P[j][1]-P[i][1]) < min_dis:
-                if dist(P[i], P[j]) < min_dis:
-                    min_dis = dist(P[i], P[j])
-                    point1 = P[i]
-                    point2 = P[j]
-    if min_dis < d:
-        return [min_dis, point1, point2]
-    else:
-        return -1
-
-
-#!=================================================================================================================================
-
-def efficient_closest_pair_routine(points):
-    if len(points) <= 3:
-        return naive_closest_pair(points)
-
-    points = sort_points_by_X(points)
-    mid = len(points)//2
-    midPoint = points[mid]
-    P_L = points[:mid]
-    P_R = points[mid:]
-
-    global point1, point2
-
-    dl = efficient_closest_pair_routine(P_L)
-    dr = efficient_closest_pair_routine(P_R)
-    L = []
-    d = min(dl, dr)
-
+def brute(points):
+    d = 1e20
     for i in range(len(points)):
-
-        if (points[i][0]-midPoint[0]) < d[0]:
-            L.append(points[i])
-
-    D = closest_pair_in_strip(L, d[0])
-    if D == -1:
-        return naive_closest_pair(plane)
-    else:
-        return min(d, D)
-
-#!======================================================================================================================================================
+        for j in range(i+1, len(points)):
+            d = min(d, dist(points[i], points[j]))
+    return d
 
 
-def efficient_closest_pair(points):
-    P = sort_points_by_X(points)
-    return efficient_closest_pair_routine(P)
-#!==========================================================================================================================
+def solve(x_sorted, y_sorted):
+    n = len(x_sorted)
+    if n <= 3:
+        return brute(x_sorted)
+    mid_point = x_sorted[n//2]
+    x_sorted_left = x_sorted[:n//2]
+    x_sorted_right = x_sorted[n//2:]
+
+    y_sorted_left, y_sorted_right = [], []
+
+    for point in y_sorted:
+        if point[0] <= mid_point[0]:
+            y_sorted_left.append(point)
+        else:
+            y_sorted_right.append(point)
+
+    delta = min(solve(x_sorted_left, y_sorted_left), solve(x_sorted_right, y_sorted_right))
+
+    strip = []
+    for point in y_sorted:
+        if mid_point[0]-delta < point[0] < mid_point[0]+delta:
+            strip.append(point)
+    d = delta
+    for i in range(len(strip)):
+        for j in range(i+1, len(strip)):
+            d = min(d, dist(strip[i], strip[j]))
+
+    return d
 
 
 def generate_plane(plane_size, num_pts):
@@ -99,15 +51,13 @@ def generate_plane(plane_size, num_pts):
 
     return random_points
 
-#!========================================================================================================
-
 
 if __name__ == "__main__":
     num_pts = 10
-    plane_size = (10, 10)
-    plane = generate_plane(plane_size, num_pts)
-    print(plane)
-    print(efficient_closest_pair(plane))
-    print(naive_closest_pair(plane))
-
-# ?note:  change the num_pts or plane_size to see the difference in time-complexity of both method
+    plane_size = (100, 100)
+    points = generate_plane(plane_size, num_pts)
+    print(points)
+    print(brute(points))
+    x_sorted = sorted(points, key=lambda x: x[0])
+    y_sorted = sorted(points, key=lambda y: y[1])
+    print(solve(x_sorted, y_sorted))
